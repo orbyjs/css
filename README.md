@@ -21,8 +21,8 @@ let Button = styled("button")`
 2. [Static Styles](#static-styles)
 3. [Dynamic styles](#dynamic-styles)
 4. [Special selectors](#special-selectors)
-    1.[:host](#:host)
-    1.[:global](#:global)
+    1. [:host](#:host)
+    2. [:global](#:global)
 5. [@keyframes](#@keyframes)
 6. [Examples](#examples)
 

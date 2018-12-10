@@ -21,8 +21,8 @@ let Button = styled("button")`
 2. [Estilos estaticos](#estilos-estaticos)
 3. [Estilos dinamicos](#estilos-dinamicos)
 4. [Selectores especiales](#selectores-especiales)
-    1.[:host](#:host)
-    1.[:global](#:global)
+    1. [:host](#:host)
+    2. [:global](#:global)
 5. [@keyframes](#@keyframes)
 6. [Ejemplos](#ejemplos)
 
