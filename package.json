@@ -1,0 +1,31 @@
+{
+  "name": "@orby/css",
+  "version": "0.0.5",
+  "description": "",
+  "main": "dist/orby-css.js",         
+  "umd:main": "dist/orby-css.umd.js", 
+  "module": "dist/orby-css.mjs",      
+  "source": "src/index.js",    
+  "scripts": {
+    "watch" : "microbundle -w --name @orby/css",
+    "build" : "microbundle --name @orby/css",
+    "build:orby" : "microbundle -i src/orby/index.js -o orby.js -f es,cjs --external @orby/core,@orby/css",
+    "build:preact" : "microbundle -i src/preact/index.js -o preact.js -f es,cjs --external preact,@orby/css",
+    "build:react" : "microbundle -i src/react/index.js -o react.js -f es,cjs --external react,@orby/css",
+    "prepare": "npm run build && npm run build:orby && npm run build:preact && npm run build:react",
+    "upload": "npm publish --access public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "@orby/css"
+  },
+  "keywords": [
+    "css",
+    "jsx"
+  ],
+  "author": "Matias Trujillo",
+  "license": "ISC",
+  "devDependencies": {
+    "microbundle": "^0.8.3"
+  }
+}
