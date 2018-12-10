@@ -1,4 +1,4 @@
-#@orby/css
+# @orby/css
 
 **@orby/css** allows to maintain the control and scope of the CSS of JSX-based components, with only 1.3kB.
 
@@ -17,14 +17,14 @@ let Button = styled("button")`
 
 ## Indice
 
-1.[Functioning](#functioning)
-1.[Static Styles](#static-styles)
-2.[Dynamic styles](#dynamic-styles)
-3.[Special selectors](#special-selectors)
+1. [Functioning](#functioning)
+2. [Static Styles](#static-styles)
+3. [Dynamic styles](#dynamic-styles)
+4. [Special selectors](#special-selectors)
     1.[:host](#:host)
     1.[:global](#:global)
-4.[@keyframes](#@keyframes)
-5.[Examples](#examples)
+5. [@keyframes](#@keyframes)
+6. [Examples](#examples)
 
 ## Functioning
 

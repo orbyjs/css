@@ -1,4 +1,4 @@
-#@orby/css
+# @orby/css
 
 `@orby/css `permite mantener el control y alcance del estilo asociado al componentes a base de JSX, con solo 1.3kB.
 
@@ -17,13 +17,14 @@ let Button = styled("button")`
 
 ## Indice
 
-1.[Funcionamiento](#funcionamiento)
-1.[Estilos estaticos](#estilos-estaticos)
-2.[Estilos dinamicos](#estilos-dinamicos)
-3.[Selectores especiales](#selectores-especiales)
-4.[@keyframes](#@keyframes)
-5.[Ejemplos](#ejemplos)
-
+1. [Funcionamiento](#funcionamiento)
+2. [Estilos estaticos](#estilos-estaticos)
+3. [Estilos dinamicos](#estilos-dinamicos)
+4. [Selectores especiales](#selectores-especiales)
+    1.[:host](#:host)
+    1.[:global](#:global)
+5. [@keyframes](#@keyframes)
+6. [Ejemplos](#ejemplos)
 
 
 ## Funcionamiento
