@@ -21,8 +21,8 @@ let Button = styled("button")`
 2. [Estilos estaticos](#estilos-estaticos)
 3. [Estilos dinamicos](#estilos-dinamicos)
 4. [Selectores especiales](#selectores-especiales)
-    1. [:host](#:host)
-    2. [:global](#:global)
+    1. [Selector host](#selector-host)
+    2. [Selector global](#selector-global)
 5. [@keyframes](#@keyframes)
 6. [Ejemplos](#ejemplos)
 
@@ -65,7 +65,7 @@ Para facilitar la impresión de estilos `@orby/css`, hace uso de  selectores esp
 1. `:host`:  permite apuntar a la misma clase, sea estática o dinámica.
 2. `:global` : permite escapar el contexto de alcance del componente
 
-### :host
+### selector host
 
 Este selector permite apuntar al componente en si, ud puede generar las siguientes confinaciones propuestas:
 
@@ -85,7 +85,7 @@ Este selector permite apuntar al componente en si, ud puede generar las siguient
 > Pueden existir mas confinaciones, ya que `@orby/css` solo remplaza `:host` por un nombre de clase, he intentado homologar el comportamiento de `:host` propuesto en el uso de shadowDom [ver más](https://developer.mozilla.org/en-US/docs/Web/CSS/:host()).
 
 
-### :global
+### selector global
 
 Este selector permite escapar del contexto local
 

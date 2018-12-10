@@ -21,8 +21,8 @@ let Button = styled("button")`
 2. [Static Styles](#static-styles)
 3. [Dynamic styles](#dynamic-styles)
 4. [Special selectors](#special-selectors)
-    1. [:host](#:host)
-    2. [:global](#:global)
+    1. [Host selector](#host-selector)
+    2. [Global selector](#global-selector)
 5. [@keyframes](#@keyframes)
 6. [Examples](#examples)
 
@@ -65,7 +65,7 @@ To facilitate the printing of **@orby/css** styles, it makes use of special sele
 1. `:host`:  allows to point to the same class, whether static or dynamic.
 2. `:global` : allows to escape the context of scope of the component.
 
-### :host
+### Host selector
 
 This selector allows you to point to the component itself, you can generate the following proposed confinements:
 
@@ -85,7 +85,7 @@ This selector allows you to point to the component itself, you can generate the 
 > I tried to homologate the behavior of `: host` proposed in the use of shadowDom [see more](https://developer.mozilla.org/en-US/docs/Web/CSS/:host()).
 
 
-### :global
+### Global selector
 
 This selector allows to escape from the local context of the component
 
