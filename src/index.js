@@ -77,7 +77,8 @@ function createGlobal(id, style) {
 
 export default function create(pragma) {
     return function styled(tag, keysProps = []) {
-        let element = document.createElement(tag);
+        let isFun = typeof tag === "function",
+            element = isFun ? {} : document.createElement(tag);
         return function local(template, ...args) {
             let idGlobal = prefix + counter++,
                 counterLocal = 0;
@@ -111,9 +112,10 @@ export default function create(pragma) {
                     };
                 for (let key in props) {
                     if (
-                        key in element ||
-                        typeof props[key] === "function" ||
-                        keysProps.indexOf(key) > -1
+                        isFun ||
+                        (key in element ||
+                            typeof props[key] === "function" ||
+                            keysProps.indexOf(key) > -1)
                     ) {
                         nextProps[key] = props[key];
                     }
