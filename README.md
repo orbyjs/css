@@ -23,7 +23,7 @@ let Button = styled("button")`
 4. [Special selectors](#special-selectors)
     1. [Host selector](#host-selector)
     2. [Global selector](#global-selector)
-5. [@keyframes](#@keyframes)
+5. [Keyframes](#keyframes)
 6. [Examples](#examples)
 
 ## Functioning
@@ -93,7 +93,7 @@ This selector allows to escape from the local context of the component
 :global(body){}
 ```
 
-## @keyframes
+## Keyframes
 
 To keep the keyframes animations **@orby/css** prefix all animation names with the class name, in this way the generated keyframes retain their effect.
 
