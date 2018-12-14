@@ -1,12 +1,11 @@
 export function trim(str) {
-    return str.trim ? str.trim() : str.replace(/^\s*|\s*$/, "");
+    return str.trim
+        ? str.trim()
+        : str.replace(/^[\s\uFEFF\xA0]+|[\s\uFEFF\xA0]+$/g, "");
 }
 
-export function isProperty(string) {
-    return string.match(/([^\:]+):(.+)(;){0,1}$/);
-}
-
-export default function mapSelector(string) {
+export function mapSelector(string) {
+    string = trim(string);
     let name = "",
         open = 0,
         parts = [],
@@ -79,28 +78,40 @@ export function parse(str) {
     str = trim(str).replace(/([^\:]+):([^\;]+){0,1}}/g, "$1:$2;}");
     for (let i = 0; i < str.length; i++) {
         letter = str[i];
-        withSlash = str[i - 1] === "\\";
-        if (
-            withSlash ||
-            ((!/\"|\'/.test(letter) && singleQuote) || doubleQuote)
-        ) {
+
+        if (str[i - 1] === "\\") {
             current += letter;
+            continue;
+        }
+
+        if (singleQuote || doubleQuote) {
+            current += letter;
+            if (letter === "'" || letter === '"') {
+                if (letter === "'") {
+                    singleQuote = false;
+                } else {
+                    doubleQuote = false;
+                }
+            }
             continue;
         }
         switch (letter) {
             case ";":
-                if (/\{/.test(current)) {
-                    current += letter;
-                } else {
+                if (!/\{/.test(current)) {
+                    current = trim(current);
                     let [all, index, value] =
-                        current.match(/([^\:]+):(.+)/) || [];
+                        current.match(/^([\w\<\-]+)(?:\s*):(.+)/) || [];
                     if (index && value) {
                         currentGroup.properties.push({
-                            index: trim(index),
+                            index,
                             value: trim(value)
                         });
-                        current = "";
+                    } else {
+                        current && groups.push(createType(current));
                     }
+                    current = "";
+                } else {
+                    current += letter;
                 }
                 break;
             case "{":
@@ -126,11 +137,11 @@ export function parse(str) {
                 current = "";
                 break;
             case "'":
-                singleQuote ? singleQuote-- : singleQuote++;
+                singleQuote = true;
                 current += letter;
                 break;
             case '"':
-                doubleQuote ? doubleQuote-- : doubleQuote++;
+                doubleQuote = true;
                 current += letter;
                 break;
             default:
