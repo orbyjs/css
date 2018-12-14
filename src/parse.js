@@ -62,7 +62,15 @@ export function createType(selector) {
 
     return data;
 }
-
+/**
+ *
+ * @param {String} str - css rules
+ * @return {Array}
+ *
+ * TODO:
+ * Add support:
+ * selector{color:'every:a;{}'}
+ */
 export function parse(str) {
     let letter,
         current = "",
