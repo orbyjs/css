@@ -14,7 +14,8 @@
     "build:orby": "microbundle -i src/orby/index.js -o orby.js -f es,cjs --external @orby/core,@orby/css",
     "build:preact": "microbundle -i src/preact/index.js -o preact.js -f es,cjs --external preact,@orby/css",
     "build:react": "microbundle -i src/react/index.js -o react.js -f es,cjs --external react,@orby/css",
-    "prepare": "npm run build && build:parse && npm run build:orby && npm run build:preact && npm run build:react",
+    "build:group":"npm run build:orby && npm run build:preact && npm run build:react",
+    "prepare": "npm run build && npm run build:group",
     "upload": "npm publish --access public"
   },
   "repository": {
