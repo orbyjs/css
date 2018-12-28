@@ -4,9 +4,65 @@ let counter = 0;
 let prefix = "css-";
 let regId = /<<id>>/g;
 let regNm = /<<(?:\:){0,1}(\d+)>>(\;){0,1}/g;
+let regAn = /^animation(-name){0,1}$/;
 let strId = "<<id>>";
 
+function optimize(rules) {
+    let locals = [],
+        globals = [];
+    for (let i = 0; i < rules.length; i++) {
+        let { properties, ...rule } = rules[i],
+            lengthProperties = properties.length,
+            propertiesLocals = [],
+            propertiesGlobal = [];
+        for (let i = 0; i < lengthProperties; i++) {
+            let { value, index } = properties[i],
+                local = false;
+
+            if (regNm.test(value) || regAn.test(index)) {
+                local = true;
+                propertiesLocals.push({ value, index });
+            } else {
+                propertiesGlobal.push({ value, index });
+            }
+        }
+
+        if (lengthProperties) {
+            if (propertiesLocals.length) {
+                locals.push({ ...rule, properties: propertiesLocals });
+            }
+            if (propertiesGlobal.length) {
+                globals.push({ ...rule, properties: propertiesGlobal });
+            }
+        } else {
+            switch (rule.type) {
+                case "media":
+                case "supports":
+                    let children = optimize(rule.children);
+                    locals = locals.concat({
+                        ...rule,
+                        properties: [],
+                        children: children.locals
+                    });
+                    globals = globals.concat({
+                        ...rule,
+                        properties: [],
+                        children: children.globals
+                    });
+                    break;
+                default:
+                    globals.push({ ...rule, properties: [] });
+            }
+        }
+    }
+    return { globals, locals };
+}
+
 function scoped(rules, id, prefix, deep) {
+    if (!deep) {
+        let { locals, globals } = optimize(rules);
+        rules = locals.concat(globals);
+    }
     rules = rules.map(rule => {
         let selectors, properties;
         switch (rule.type) {
@@ -37,7 +93,7 @@ function scoped(rules, id, prefix, deep) {
                     .join(",");
                 properties = rule.properties
                     .map(({ index, value }) => {
-                        if (/^animation(-name){0,1}$/.test(index)) {
+                        if (regAn.test(index)) {
                             value = value.replace(/(\s*)/, id + "-$1");
                         }
                         return `${index}:${value}`;
@@ -67,9 +123,10 @@ function scoped(rules, id, prefix, deep) {
 }
 
 function createGlobal(id, style) {
-    let tag = document.querySelector(`style${id}`);
+    let tag = document.querySelector(`style.${id}`);
     if (!tag) {
         tag = document.createElement("style");
+        tag.className = id;
         document.head.append(tag);
     }
     tag.innerHTML = style.replace(regId, id);
@@ -99,14 +156,21 @@ export default function create(pragma) {
             createGlobal(idGlobal, globals);
             return function component(props, context, optional) {
                 let idLocal = idGlobal + "-" + counterLocal++,
-                    style = locals.replace(regId, idLocal).replace(
-                        regNm,
-                        (all, index, end) =>
-                            args[index](props, optional || context, {
-                                idGlobal,
-                                idLocal
-                            }) + (end || "")
-                    ),
+                    style = locals
+                        .replace(
+                            /animation(-name){0,1}(\s*):(\s*)<<id>>/g,
+                            all => all.replace(regId, idGlobal)
+                        )
+                        .replace(regId, idLocal)
+
+                        .replace(regNm, (all, index, end) => {
+                            return (
+                                args[index](props, optional || context, {
+                                    idGlobal,
+                                    idLocal
+                                }) + (end || "")
+                            );
+                        }),
                     nextProps = {
                         class: `${idGlobal} ${idLocal} ${props.class || ""}`
                     };
