@@ -1,6 +1,6 @@
 # @orby/css
 
-**@orby/css** allows to maintain the control and scope of the CSS of JSX-based components, with only 1.3kB.
+**@orby/css** allows to maintain the control and scope of the CSS of JSX-based components, with only 1.9kB.
 
 ```jsx
 import {h} from "@orby/core";

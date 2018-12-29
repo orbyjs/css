@@ -1,6 +1,6 @@
 {
   "name": "@orby/css",
-  "version": "0.0.8",
+  "version": "0.0.10",
   "description": "",
   "main": "dist/orby-css.js",
   "umd:main": "dist/orby-css.umd.js",
