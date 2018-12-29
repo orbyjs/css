@@ -1,5 +1,6 @@
 import { parse } from "./parse";
 
+let ID = "orby-css";
 let counter = 0;
 let prefix = "css-";
 let regId = /<<id>>/g;
@@ -122,20 +123,42 @@ function scoped(rules, id, prefix, deep) {
     return rules.join("");
 }
 
-function createGlobal(id, style) {
-    let tag = document.querySelector(`style.${id}`);
+function useGlobal(id, style) {
+    let tag = document.querySelector(`style#${ID}`);
     if (!tag) {
         tag = document.createElement("style");
-        tag.className = id;
+        tag.id = ID;
         document.head.append(tag);
     }
-    tag.innerHTML = style.replace(regId, id);
+    tag.appendChild(document.createTextNode(style.replace(regId, id)));
 }
 
 export default function create(pragma) {
     return function styled(tag, keysProps = []) {
         let isFun = typeof tag === "function",
-            element = isFun ? {} : document.createElement(tag);
+            element,
+            proto;
+        switch (tag) {
+            case "a":
+                element = HTMLLinkElement;
+                break;
+            case "svg":
+                element = SVGElement;
+                break;
+            case "img":
+                element = HTMLImageElement;
+                break;
+            case "button":
+                element = HTMLButtonElement;
+                break;
+            case "input":
+                element = HTMLInputElement;
+                break;
+            default:
+                element = HTMLElement;
+                break;
+        }
+        proto = element.prototype;
         return function local(template, ...args) {
             let idGlobal = prefix + counter++,
                 counterLocal = 0;
@@ -153,7 +176,7 @@ export default function create(pragma) {
                 })
                 .join("");
             let { globals, locals } = scoped(parse(template), strId, ".");
-            createGlobal(idGlobal, globals);
+            useGlobal(idGlobal, globals);
             return function component(props, context, optional) {
                 let idLocal = idGlobal + "-" + counterLocal++,
                     style = locals
@@ -177,7 +200,7 @@ export default function create(pragma) {
                 for (let key in props) {
                     if (
                         isFun ||
-                        (key in element ||
+                        (key in proto ||
                             typeof props[key] === "function" ||
                             keysProps.indexOf(key) > -1)
                     ) {
