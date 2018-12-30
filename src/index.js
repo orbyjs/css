@@ -1,14 +1,17 @@
 import { parse } from "./parse";
+export { parse } from "./parse";
 
-let ID = "orby-css";
-let counter = 0;
+export let current = {
+    index: 0
+};
+
 let prefix = "css-";
 let regId = /<<id>>/g;
 let regNm = /<<(?:\:){0,1}(\d+)>>(\;){0,1}/g;
 let regAn = /^animation(-name){0,1}$/;
 let strId = "<<id>>";
 
-function optimize(rules) {
+export function optimizeRules(rules) {
     let locals = [],
         globals = [];
     for (let i = 0; i < rules.length; i++) {
@@ -39,7 +42,7 @@ function optimize(rules) {
             switch (rule.type) {
                 case "media":
                 case "supports":
-                    let children = optimize(rule.children);
+                    let children = optimizeRules(rule.children);
                     locals = locals.concat({
                         ...rule,
                         properties: [],
@@ -59,9 +62,9 @@ function optimize(rules) {
     return { globals, locals };
 }
 
-function scoped(rules, id, prefix, deep) {
+export function rulesToCss(rules, id, prefix, deep, isKeyframe) {
     if (!deep) {
-        let { locals, globals } = optimize(rules);
+        let { locals, globals } = optimizeRules(rules);
         rules = locals.concat(globals);
     }
     rules = rules.map(rule => {
@@ -69,11 +72,17 @@ function scoped(rules, id, prefix, deep) {
         switch (rule.type) {
             case "keyframes":
                 selectors = "@keyframes " + id + "-" + rule.value;
-                properties = properties = scoped(rule.children, "", "", true);
+                properties = properties = rulesToCss(
+                    rule.children,
+                    "",
+                    "",
+                    true,
+                    true
+                );
                 return `${selectors}{${properties}}`;
             case "media":
                 selectors = "@media " + rule.value;
-                properties = scoped(rule.children, id, prefix, true);
+                properties = rulesToCss(rule.children, id, prefix, true);
                 return `${selectors}{${properties}}`;
             case "selector":
                 selectors = rule.selectors
@@ -85,9 +94,17 @@ function scoped(rules, id, prefix, deep) {
                                     .map(arg => `${selector.name}${arg}`)
                                     .join(",");
                             }
-                        }
-                        if (/:global/.test(selector.name)) {
+                        } else if (/:global/.test(selector.name)) {
                             name = selector.args.join(",");
+                        } else {
+                            if (!isKeyframe) {
+                                name =
+                                    ":host " +
+                                    selector.name +
+                                    (selector.args.length > 0
+                                        ? `(${selector.args})`
+                                        : "");
+                            }
                         }
                         return name.replace(/:host/g, prefix + id);
                     })
@@ -123,17 +140,7 @@ function scoped(rules, id, prefix, deep) {
     return rules.join("");
 }
 
-function useGlobal(id, style) {
-    let tag = document.querySelector(`style#${ID}`);
-    if (!tag) {
-        tag = document.createElement("style");
-        tag.id = ID;
-        document.head.append(tag);
-    }
-    tag.appendChild(document.createTextNode(style.replace(regId, id)));
-}
-
-export default function create(pragma) {
+export function create(pragma) {
     return function styled(tag, keysProps = []) {
         let isFun = typeof tag === "function",
             element,
@@ -159,8 +166,13 @@ export default function create(pragma) {
                 break;
         }
         proto = element.prototype;
+
+        let styleTag = document.createElement("style");
+        styleTag.dataset.orby = "css";
+        document.head.appendChild(styleTag);
+
         return function local(template, ...args) {
-            let idGlobal = prefix + counter++,
+            let idGlobal = prefix + ++current.index,
                 counterLocal = 0;
 
             template = template
@@ -175,9 +187,11 @@ export default function create(pragma) {
                     return string;
                 })
                 .join("");
-            let { globals, locals } = scoped(parse(template), strId, ".");
-            useGlobal(idGlobal, globals);
-            return function component(props, context, optional) {
+            let { globals, locals } = rulesToCss(parse(template), strId, ".");
+
+            styleTag.innerHTML = globals.replace(regId, idGlobal);
+
+            return function component(props, context) {
                 let idLocal = idGlobal + "-" + counterLocal++,
                     style = locals
                         .replace(
@@ -185,14 +199,8 @@ export default function create(pragma) {
                             all => all.replace(regId, idGlobal)
                         )
                         .replace(regId, idLocal)
-
                         .replace(regNm, (all, index, end) => {
-                            return (
-                                args[index](props, optional || context, {
-                                    idGlobal,
-                                    idLocal
-                                }) + (end || "")
-                            );
+                            return args[index](props, context) + (end || "");
                         }),
                     nextProps = {
                         class: `${idGlobal} ${idLocal} ${props.class || ""}`
