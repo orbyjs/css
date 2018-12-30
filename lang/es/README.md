@@ -113,5 +113,17 @@ let Rotate = styled("div")`
 `;
 ```
 
-## Ejemplos
+## reglas de escritura
+
+1. los **keyframes ** no pueden ser de carácter dinámico en definición, si la definición de animaciones puede ser de carácter dinámico.
+
+   ```jsx
+   styles("button")`
+   :host{
+   	animation : ${()=>"rotate 1s"}
+   }
+   `
+   ```
+
+   > si ud trabaja con funciones para definir ejemplo el uso de una animación, esta será prefijada solo en la condición expuesta.
 
