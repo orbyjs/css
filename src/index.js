@@ -1,226 +1,175 @@
+import { options } from "./options";
 import { parse } from "./parse";
 export { parse } from "./parse";
+export { options } from "./options";
 
-export let current = {
-    index: 0
-};
+let ID = 0;
 
-let prefix = "css-";
-let regId = /<<id>>/g;
-let regNm = /<<(?:\:){0,1}(\d+)>>(\;){0,1}/g;
-let regAn = /^animation(-name){0,1}$/;
-let strId = "<<id>>";
+export function getTagInstance(tagName) {
+    let doc = options.document || document;
 
-export function optimizeRules(rules) {
-    let locals = [],
-        globals = [];
-    for (let i = 0; i < rules.length; i++) {
-        let { properties, ...rule } = rules[i],
-            lengthProperties = properties.length,
-            propertiesLocals = [],
-            propertiesGlobal = [];
-        for (let i = 0; i < lengthProperties; i++) {
-            let { value, index } = properties[i],
-                local = false;
-
-            if (regNm.test(value) || regAn.test(index)) {
-                local = true;
-                propertiesLocals.push({ value, index });
-            } else {
-                propertiesGlobal.push({ value, index });
-            }
-        }
-
-        if (lengthProperties) {
-            if (propertiesLocals.length) {
-                locals.push({ ...rule, properties: propertiesLocals });
-            }
-            if (propertiesGlobal.length) {
-                globals.push({ ...rule, properties: propertiesGlobal });
-            }
-        } else {
-            switch (rule.type) {
-                case "media":
-                case "supports":
-                    let children = optimizeRules(rule.children);
-                    locals = locals.concat({
-                        ...rule,
-                        properties: [],
-                        children: children.locals
-                    });
-                    globals = globals.concat({
-                        ...rule,
-                        properties: [],
-                        children: children.globals
-                    });
-                    break;
-                default:
-                    globals.push({ ...rule, properties: [] });
-            }
-        }
+    if (!options.HTMLInstances) {
+        options.HTMLInstances = {};
     }
-    return { globals, locals };
+
+    if (!options.HTMLInstances[tagName]) {
+        options.HTMLInstances[tagName] = doc.createElement(tagName);
+    }
+
+    return options.HTMLInstances[tagName];
 }
 
-export function rulesToCss(rules, id, prefix, deep, isKeyframe) {
-    if (!deep) {
-        let { locals, globals } = optimizeRules(rules);
-        rules = locals.concat(globals);
+export function stateToArgs(states) {
+    return states
+        .map(
+            ({ value, args }) =>
+                value + (args.length ? `(${args.join(",")})` : "")
+        )
+        .join(":");
+}
+
+export function createRuleSelector(rule, space, parent, deep = 0) {
+    let rules = [],
+        root = "." + space,
+        selectors = rule.selectors.map(([{ value, args }, ...states]) => {
+            value = value.replace(/(\s+)$/, " ");
+            switch (value) {
+                case ":host":
+                    return args.length ? args.map(value => root + value) : root;
+                case ":global":
+                    return args.join(",");
+                case "& ":
+                case "&":
+                    return (
+                        parent +
+                        (value === "&" ? "" : " ") +
+                        stateToArgs(states)
+                    );
+                default:
+                    return deep
+                        ? (parent ? parent + " " : "") +
+                              value +
+                              stateToArgs(states)
+                        : `${root} ${value + stateToArgs(states)}`;
+            }
+        }),
+        properties = rule.properties.map(({ index, value }) => {
+            if (/^animation(-name){0,1}$/.test(index)) {
+                value = space + value;
+            }
+            return `${index}:${value}`;
+        });
+
+    if (properties.length) {
+        rules.push(`${selectors.join(",")}{${properties.join(";")}}`);
     }
-    rules = rules.map(rule => {
-        let selectors, properties;
+    rule.children.map(rule => {
+        rule = selectors.map(selector =>
+            createRuleSelector(rule, space, selector, deep + 1)
+        );
+        if (rule.length) rules = rules.concat(...rule);
+    });
+
+    return rules;
+}
+
+export function createStaticCss(rules, space, parent = "") {
+    return rules.reduce((nextRules, rule) => {
         switch (rule.type) {
             case "keyframes":
-                selectors = "@keyframes " + id + "-" + rule.value;
-                properties = properties = rulesToCss(
-                    rule.children,
-                    "",
-                    "",
-                    true,
-                    true
+                return nextRules.concat(
+                    `@keyframes ${space + rule.value}{${rule.children
+                        .map(rule => createRuleSelector(rule, space, "", 1))
+                        .join("")}}`
                 );
-                return `${selectors}{${properties}}`;
             case "media":
-                selectors = "@media " + rule.value;
-                properties = rulesToCss(rule.children, id, prefix, true);
-                return `${selectors}{${properties}}`;
+            case "supports":
+                return nextRules.concat(
+                    `@media ${rule.value}{${rule.children
+                        .map(rule => createRuleSelector(rule, space))
+                        .join("")}}`
+                );
             case "selector":
-                selectors = rule.selectors
-                    .map(selector => {
-                        let name = selector.name;
-                        if (/:host/.test(selector.name)) {
-                            if (selector.args.length) {
-                                name = selector.args
-                                    .map(arg => `${selector.name}${arg}`)
-                                    .join(",");
-                            }
-                        } else if (/:global/.test(selector.name)) {
-                            name = selector.args.join(",");
-                        } else {
-                            if (!isKeyframe) {
-                                name =
-                                    ":host " +
-                                    selector.name +
-                                    (selector.args.length > 0
-                                        ? `(${selector.args})`
-                                        : "");
-                            }
-                        }
-                        return name.replace(/:host/g, prefix + id);
-                    })
-                    .join(",");
-                properties = rule.properties
-                    .map(({ index, value }) => {
-                        if (regAn.test(index)) {
-                            value = value.replace(/(\s*)/, id + "-$1");
-                        }
-                        return `${index}:${value}`;
-                    })
-                    .join(";");
-
-                return `${selectors}{${properties}}`;
+                return nextRules.concat(createRuleSelector(rule, space));
             case "import":
-                return rule.selector + ";";
+                return nextRules.concat(rule.selector + ";");
             default:
-                return "";
+                return nextRules;
         }
-    });
-    if (!deep) {
-        let globals = "",
-            locals = "";
-        rules.forEach(str => {
-            if (regNm.test(str)) {
-                locals += str;
-            } else {
-                globals += str;
-            }
-        });
-        return { globals, locals };
-    }
-    return rules.join("");
+    }, []);
 }
 
-export function create(pragma) {
-    return function styled(tag, keysProps = []) {
-        let isFun = typeof tag === "function",
-            element,
-            proto;
-        switch (tag) {
-            case "a":
-                element = HTMLLinkElement;
-                break;
-            case "svg":
-                element = SVGElement;
-                break;
-            case "img":
-                element = HTMLImageElement;
-                break;
-            case "button":
-                element = HTMLButtonElement;
-                break;
-            case "input":
-                element = HTMLInputElement;
-                break;
-            default:
-                element = HTMLElement;
-                break;
-        }
-        proto = element.prototype;
+export function transpile(mapString, args) {
+    let customVars = {},
+        space = "--cn-" + ID++,
+        localID = 0,
+        css = mapString
+            .map((string, index) => {
+                if (typeof args[index] === "function") {
+                    let name = space + "-" + localID++;
+                    customVars[name] = args[index];
+                    string += `var(${name})`;
+                } else {
+                    string += args[index] || "";
+                }
+                return string;
+            })
+            .join("");
+    return {
+        space,
+        rules: createStaticCss(parse(css), space),
+        customVars
+    };
+}
 
-        let styleTag = document.createElement("style");
-        styleTag.dataset.orby = "css";
-        document.head.appendChild(styleTag);
+export function createStyled(pragma) {
+    return function scope(tagName) {
+        let isComponent = typeof tagName === "function",
+            tagInstance = isComponent ? {} : getTagInstance(tagName) || {};
 
-        return function local(template, ...args) {
-            let idGlobal = prefix + ++current.index,
-                counterLocal = 0;
+        return function styled(mapString, ...args) {
+            let { space, rules, customVars } = transpile(mapString, args),
+                doc = options.document || document;
 
-            template = template
-                .map((string, index) => {
-                    if (typeof args[index] === "function") {
-                        string += /\:(\s+)$/.test(string)
-                            ? `<<${index}>>`
-                            : `<<:${index}>>;`;
-                    } else {
-                        string += args[index] || "";
-                    }
-                    return string;
-                })
-                .join("");
-            let { globals, locals } = rulesToCss(parse(template), strId, ".");
+            let existStyle = doc.getElementById(space),
+                style = existStyle || doc.createElement("style");
 
-            styleTag.innerHTML = globals.replace(regId, idGlobal);
+            if (!existStyle) {
+                style.id = space;
+                doc.head.appendChild(style);
+            }
 
-            return function component(props, context) {
-                let idLocal = idGlobal + "-" + counterLocal++,
-                    style = locals
-                        .replace(
-                            /animation(-name){0,1}(\s*):(\s*)<<id>>/g,
-                            all => all.replace(regId, idGlobal)
-                        )
-                        .replace(regId, idLocal)
-                        .replace(regNm, (all, index, end) => {
-                            return args[index](props, context) + (end || "");
-                        }),
-                    nextProps = {
-                        class: `${idGlobal} ${idLocal} ${props.class || ""}`
-                    };
-                for (let key in props) {
+            if (style.sheet && !options.disableSheet) {
+                rules.map((rule, index) => style.sheet.insertRule(rule, index));
+            } else {
+                style.innerHTML = rules.join("");
+            }
+            return function Component(props, context) {
+                let style = {},
+                    nextProps = {},
+                    className = [space];
+                if (props.className || props.class) {
+                    className.push(props.className || props.class);
+                }
+                for (let index in customVars) {
+                    let value = customVars[index](props, context);
+                    if (value) style[index] = value;
+                }
+
+                for (let index in props) {
                     if (
-                        isFun ||
-                        (key in proto ||
-                            typeof props[key] === "function" ||
-                            keysProps.indexOf(key) > -1)
+                        isComponent ||
+                        typeof props[index] === "function" ||
+                        index in tagInstance
                     ) {
-                        nextProps[key] = props[key];
+                        nextProps[index] = props[index];
                     }
                 }
-                return pragma(
-                    tag,
-                    nextProps,
-                    pragma("style", {}, style),
-                    ...props.children
-                );
+
+                nextProps.className = nextProps.class = className.join(" ");
+                nextProps.style = style;
+
+                return pragma(tagName, nextProps, props.children);
             };
         };
     };
