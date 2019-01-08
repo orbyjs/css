@@ -1,47 +1,24 @@
 import { mapSelector, parse } from "../src/parse";
 
 describe("mapSelector", () => {
-    test("import", () => {
-        let selector = `
-        @import url('https://fonts.googleapis.com/css?family=Roboto');
-        `,
-            [rule] = mapSelector(selector);
-
-        expect(rule).toEqual({
-            name: "@import url",
-            args: ["'https://fonts.googleapis.com/css?family=Roboto'"]
-        });
-    });
     test("selector", () => {
         let selector = `
             selector(.button)
         `,
             [rule] = mapSelector(selector);
 
-        expect(rule).toEqual({
-            name: "selector",
-            args: [".button"]
-        });
+        expect(rule).toEqual([{ value: "selector", args: [".button"] }]);
     });
     test("selector ...", () => {
         let selector = `
             selector(.a,.b,.c)
         `,
             [rule] = mapSelector(selector);
-
-        expect(rule).toEqual({
-            name: "selector",
-            args: [".a", ".b", ".c"]
-        });
+        expect(rule).toEqual([{ value: "selector", args: [".a", ".b", ".c"] }]);
     });
 });
 
 describe("parse", () => {
-    test("import", () => {
-        let css = `
-            @import url('https://fonts.googleapis.com/css?family=Roboto');
-        `;
-    });
     test("keyframes", () => {
         let css = `
         @keyframes mymove {
@@ -61,30 +38,29 @@ describe("parse", () => {
                     children: [],
                     type: "selector",
                     properties: [{ index: "top", value: "0px" }],
-                    selectors: [{ name: "from", args: [] }]
+                    selectors: [[{ value: "from", args: [] }]]
                 },
                 {
                     selector: "50%",
                     children: [],
                     type: "selector",
                     properties: [{ index: "left", value: "-100px" }],
-                    selectors: [{ name: "50%", args: [] }]
+                    selectors: [[{ value: "50%", args: [] }]]
                 },
                 {
                     selector: "to",
                     children: [],
                     type: "selector",
                     properties: [{ index: "top", value: "200px" }],
-                    selectors: [{ name: "to", args: [] }]
+                    selectors: [[{ value: "to", args: [] }]]
                 }
             ],
             properties: []
         });
     });
-
     test("media", () => {
         let css = `
-        @media (max-width:300px{
+        @media (max-width:300px){
             a{top: 0px}
             b{left:-100px}
             c{top: 200px}
@@ -92,30 +68,30 @@ describe("parse", () => {
             [rule] = parse(css);
 
         expect(rule).toEqual({
-            selector: "@media (max-width:300px",
+            selector: "@media (max-width:300px)",
             type: "media",
-            value: "(max-width:300px",
+            value: "(max-width:300px)",
             children: [
                 {
                     selector: "a",
                     children: [],
                     type: "selector",
                     properties: [{ index: "top", value: "0px" }],
-                    selectors: [{ name: "a", args: [] }]
+                    selectors: [[{ value: "a", args: [] }]]
                 },
                 {
                     selector: "b",
                     children: [],
                     type: "selector",
                     properties: [{ index: "left", value: "-100px" }],
-                    selectors: [{ name: "b", args: [] }]
+                    selectors: [[{ value: "b", args: [] }]]
                 },
                 {
                     selector: "c",
                     children: [],
                     type: "selector",
                     properties: [{ index: "top", value: "200px" }],
-                    selectors: [{ name: "c", args: [] }]
+                    selectors: [[{ value: "c", args: [] }]]
                 }
             ],
             properties: []
