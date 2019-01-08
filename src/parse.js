@@ -6,44 +6,111 @@ export function trim(str) {
 
 export function mapSelector(string) {
     string = trim(string);
-    let name = "",
-        open = 0,
-        parts = [],
-        args = [],
-        prev;
-    for (let i = 0; i < string.length; i++) {
-        let letter = string[i];
-        if (letter === "(") {
-            if (!open++) {
-                args = [];
-                prev = name;
-                name = "";
-            } else {
-                name += letter;
+    let length = string.length,
+        letter = "",
+        openArgs = 0,
+        selector = [],
+        selectors = [],
+        currentArgs = "",
+        singleQuote = 0,
+        doubleQuote = 0,
+        state = { value: "", args: [] },
+        insertSelector = selector =>
+            selectors.indexOf(selector) === -1 && selectors.push(selector),
+        insertState = state =>
+            selector.indexOf(state) === -1 && selector.push(state);
+
+    insertState(state);
+
+    for (let index = 0; index < length; index++) {
+        letter = string[index];
+        if (singleQuote || doubleQuote) {
+            currentArgs += letter;
+            if (letter === "'" || letter === '"') {
+                if (letter === "'") {
+                    singleQuote = false;
+                } else {
+                    doubleQuote = false;
+                }
             }
-        } else if (letter === ")") {
-            if (!--open) {
-                args.push(name);
-                parts.push({
-                    name: prev,
-                    args
-                });
-                name = "";
-                args = [];
-            } else {
-                name += letter;
-            }
-        } else {
-            if (letter === ",") {
-                name && (open ? args.push(name) : parts.push({ name }));
-                name = "";
-            } else {
-                name += letter;
-            }
+            continue;
+        }
+        switch (letter) {
+            case ":":
+                if (string[index - 1] === ":") {
+                    state.value += ":";
+                } else {
+                    if (state.value) {
+                        insertState(state);
+                        insertState(
+                            (state = {
+                                value: ":",
+                                args: []
+                            })
+                        );
+                    } else {
+                        state.value = ":";
+                    }
+                }
+                currentArgs = "";
+                break;
+            case "(":
+            case ")":
+                if (letter == "(") {
+                    if (!openArgs++) {
+                        currentArgs = "";
+                    }
+                } else {
+                    if (!--openArgs) {
+                        state.args.push(currentArgs);
+                        currentArgs = "";
+                    }
+                }
+                break;
+            case "'":
+            case '"':
+                if (letter === "'") {
+                    singleQuote++;
+                } else {
+                    doubleQuote++;
+                }
+                currentArgs += letter;
+                break;
+            case ",":
+                if (openArgs) {
+                    state.args.push(currentArgs);
+                    currentArgs = "";
+                } else {
+                    if (selector.length) {
+                        insertSelector(selector);
+                    }
+                    if (state.value) {
+                        insertState(state);
+                    }
+                    insertSelector(
+                        (selector = [
+                            (state = {
+                                value: "",
+                                args: []
+                            })
+                        ])
+                    );
+                }
+                break;
+
+            case "\n":
+                continue;
+            default:
+                if (openArgs) {
+                    currentArgs += letter;
+                } else {
+                    state.value += letter;
+                }
         }
     }
-    if (name) parts.push({ name, args });
-    return parts;
+    if (state.value) insertState(state);
+    if (selector.length) insertSelector(selector);
+    return selectors;
 }
 
 export function createType(selector) {
