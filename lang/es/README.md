@@ -1,6 +1,6 @@
 # @orby/css
 
-`@orby/css `permite mantener el control y alcance del estilo asociado al componentes a base de JSX, con solo 1.3kB.
+`@orby/css `permite mantener el control y alcance del estilo asociado al componentes a base de JSX, con solo 1.8kB.
 
 ```jsx
 import {h} from "@orby/core";
@@ -112,18 +112,4 @@ let Rotate = styled("div")`
     }
 `;
 ```
-
-## reglas de escritura
-
-1. los **keyframes ** no pueden ser de carácter dinámico en definición, si la definición de animaciones puede ser de carácter dinámico.
-
-   ```jsx
-   styles("button")`
-   :host{
-   	animation : ${()=>"rotate 1s"}
-   }
-   `
-   ```
-
-   > si ud trabaja con funciones para definir ejemplo el uso de una animación, esta será prefijada solo en la condición expuesta.
 
