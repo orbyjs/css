@@ -1,3 +1,3 @@
 import { createElement } from "react";
-import { create } from "@orby/css";
-export default create(createElement);
+import { createStyled } from "@orby/css";
+export default createStyled(createElement);

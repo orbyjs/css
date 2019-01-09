@@ -145,15 +145,16 @@ export function createStyled(pragma) {
                 style.innerHTML = rules.join("");
             }
             return function Component(props, context) {
-                let style = {},
+                let style = typeof props.style === "string" ? props.style : "",
                     nextProps = {},
                     className = [space];
+
                 if (props.className || props.class) {
                     className.push(props.className || props.class);
                 }
                 for (let index in customVars) {
                     let value = customVars[index](props, context);
-                    if (value) style[index] = value;
+                    if (value) style += `${index}:${value};`;
                 }
 
                 for (let index in props) {
@@ -167,6 +168,7 @@ export function createStyled(pragma) {
                 }
 
                 nextProps.className = nextProps.class = className.join(" ");
+
                 nextProps.style = style;
 
                 return pragma(tagName, nextProps, props.children);

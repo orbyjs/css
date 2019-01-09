@@ -1,3 +1,3 @@
 import { h, render } from "@orby/core";
-import { create } from "@orby/css";
-export default create(h);
+import { createStyled } from "@orby/css";
+export default createStyled(h);
