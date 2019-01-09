@@ -178,7 +178,7 @@ export function createStyled(pragma, enableStyleObject) {
                     }
                 }
 
-                nextProps.className = nextProps.class = className.join(" ");
+                nextProps.className = className.join(" ");
 
                 nextProps.style = style;
 
