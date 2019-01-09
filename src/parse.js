@@ -174,8 +174,11 @@ export function parse(str) {
             case ";":
                 if (!/\{/.test(current)) {
                     current = trim(current);
-                    let [all, index, value] =
-                        current.match(/^([\w\<\-]+)(?:\s*):(.+)/) || [];
+                    let [all, index, space] =
+                            current.match(/^([\w\<\-]+)(\s*):(.+)/) || [],
+                        value = index
+                            ? current.slice(index.length + space.length + 1)
+                            : "";
                     if (index && value) {
                         currentGroup.properties.push({
                             index,
