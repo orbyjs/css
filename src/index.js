@@ -122,7 +122,7 @@ export function transpile(mapString, args) {
     };
 }
 
-export function createStyled(pragma) {
+export function createStyled(pragma, enableStyleObject) {
     return function scope(tagName) {
         let isComponent = typeof tagName === "function",
             tagInstance = isComponent ? {} : getTagInstance(tagName) || {};
@@ -145,16 +145,27 @@ export function createStyled(pragma) {
                 style.innerHTML = rules.join("");
             }
             return function Component(props, context) {
-                let style = typeof props.style === "string" ? props.style : "",
+                let style = enableStyleObject
+                        ? typeof props.style === "object"
+                            ? props.style
+                            : {}
+                        : typeof props.style == "string"
+                        ? props.style
+                        : "",
                     nextProps = {},
                     className = [space];
 
                 if (props.className || props.class) {
                     className.push(props.className || props.class);
                 }
+
                 for (let index in customVars) {
                     let value = customVars[index](props, context);
-                    if (value) style += `${index}:${value};`;
+                    if (enableStyleObject) {
+                        style[index] = value;
+                    } else {
+                        if (value) style += `${index}:${value};`;
+                    }
                 }
 
                 for (let index in props) {

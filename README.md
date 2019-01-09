@@ -1,33 +1,41 @@
 # @orby/css
 
-**@orby/css** allows to maintain the control and scope of the CSS of JSX-based components, with only 1.8kB.
+**@orby/css** allows to maintain the control and scope of the CSS of JSX-based components, **in only 1.9kb in size**.
 
-```jsx
-import {h} from "@orby/core";
-import styled from "@orby/css/orby";
 
-let Button = styled("button")`
-    :host{
-		background : ${(props)=>{
-    		return props.primary ? "black" : "orange";
-		}};
-    }
-`;
-```
+![Example](./assets/example.png)
 
 The dynamic context effect happens thanks to the use of [Custom properties](https://developer.mozilla.org/en-US/docs/Web/CSS/--*), each function will be replaced by an associated variable only to the className.
 
 ## Index
 
 1. [Functioning](#functioning)
-2. [Static Styles](#static-styles)
-3. [Dynamic styles](#dynamic-styles)
-4. [Special selectors](#special-selectors)
+2. [Motivation](#motivation)
+3. [Static Styles](#static-styles)
+4. [Dynamic styles](#dynamic-styles)
+5. [Special selectors](#special-selectors)
     1. [Host selector](#host-selector)
     2. [Global selector](#global-selector)
-5. [Keyframes](#keyframes)
-6. [CreateStyled](#createStyled)
-7. [Examples](#examples)
+6. [Keyframes](#keyframes)
+7. [CreateStyled](#createStyled)
+8. Examples
+    1. [Orby](https://codesandbox.io/s/v108q231zl)
+    2. [Preact](https://codesandbox.io/s/ql6zl4w4rj)
+    3. [React](https://codesandbox.io/s/jj1jjv1x2w)
+
+## Motivation
+
+Today there is a large number of tools(styled-components, emotion and others) that seek to solve the problem of encapsulation of style and achieve it excellently, but such a solution is far from what the css today offers us as semantics within the shadow -dom, for example in use of the selector [:host](https://developer.mozilla.org/en-US/docs/Web/CSS/:host())
+
+```css
+:host{
+  font-weight: bold;
+}
+```
+
+With `@ orby / css` I am looking for that you do not move away from the traditional CSS semantics, this is the objective and it is what you need to create component styles. the style for a component is and should be simple, if you are going to create components it may not require sass or less to decorate your styles. I invite you to rediscover the simple and practical traditional css in modern times.
+
+> Think of orby as a small implementation of the css associated with shadow-dom, but without the cost of shadow-dom.
 
 ## Functioning
 
@@ -59,7 +67,7 @@ styled("button")`
     }
 `
 ```
-> When detecting the use of functions in the associated rule, it is considered dynamic, this rule will exist as a node of the component and will be updated so many times the component is rendered.
+> `@orby/css` replaces functions within the style with [custom-properties](https://developer.mozilla.org/en-US/docs/Web/CSS/--*)
 
 ## Special selectors
 
