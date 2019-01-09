@@ -15,7 +15,9 @@ let Button = styled("button")`
 `;
 ```
 
-## Indice
+El efecto de contexto dinámico sucede gracias al uso de las [Custom properties ](https://developer.mozilla.org/en-US/docs/Web/CSS/--*), cada función será remplazada por una variable asociada solo al className.
+
+## Índice
 
 1. [Funcionamiento](#funcionamiento)
 2. [Estilos estaticos](#estilos-estaticos)
@@ -113,3 +115,45 @@ let Rotate = styled("div")`
 `;
 ```
 
+## parse 
+
+para poder procesar las reglas he creado un pequeño script capas de transformar el css en un objeto similar al que retorna [postcss](https://postcss.org/). en tan solo 855 B.
+
+```js
+import parse from "@orby/css/parse";
+
+let css = `
+    @media (max-width:320px){
+        button:not(.sample){
+            color : black;
+        }
+    }
+`;
+
+parse(css)
+```
+El retorno de esto es un objeto sumamente enriquecido, ideal para la construcción de reglas o lectura de propiedades.
+```js
+[
+    {
+        selector: "@media (max-width:320px)",
+        type: "media",
+        value: "(max-width:320px)",
+        children: [
+            {
+                selector: "button:not(.sample)",
+                children: [],
+                type: "selector",
+                properties: [{ index: "color", value: "black" }],
+                selectors: [
+                    [
+                        { value: "button", args: [] },
+                        { value: ":not", args: [".sample"] }
+                    ]
+                ]
+            }
+        ],
+        properties: []
+    }
+];
+```

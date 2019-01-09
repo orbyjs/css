@@ -15,7 +15,9 @@ let Button = styled("button")`
 `;
 ```
 
-## Indice
+The dynamic context effect happens thanks to the use of [Custom properties](https://developer.mozilla.org/en-US/docs/Web/CSS/--*), each function will be replaced by an associated variable only to the className.
+
+## Index
 
 1. [Functioning](#functioning)
 2. [Static Styles](#static-styles)
@@ -24,7 +26,8 @@ let Button = styled("button")`
     1. [Host selector](#host-selector)
     2. [Global selector](#global-selector)
 5. [Keyframes](#keyframes)
-6. [Examples](#examples)
+6. [CreateStyled](#createStyled)
+7. [Examples](#examples)
 
 ## Functioning
 
@@ -113,3 +116,60 @@ let Rotate = styled("div")`
 `;
 ```
 
+## CreateStyled
+
+Orby like other libraries like [HTM](https://github.com/developit/htm), is not tied to a specific library, if you already create JSX-based components, you can deliver to the label generator function (pragma) to create a styled instance to work.
+
+By default `@orby/css` delivers support to [@orby/code](https://github.com/orbyjs/core), [Preact](https://github.com/developit/preact/) and [React](https://reactjs.org/).
+
+Below is how to create the `styled` function for preact, you can use this resource by importing `@orby/css/preact`.
+
+```jsx
+import { h } from "preact";
+import { createStyled } from "@orby/css";
+
+export default createStyled(h);
+```
+
+## parse 
+
+to be able to process the rules I created a small script layers to transform the css into an object similar to the one that returns [postcss](https://postcss.org/). in only 855 B.
+
+```js
+import parse from "@orby/css/parse";
+
+let css = `
+    @media (max-width:320px){
+        button:not(.sample){
+            color : black;
+        }
+    }
+`;
+
+parse(css)
+```
+The return of this is an extremely enriched object, ideal for the construction of rules or reading of properties.
+```js
+[
+    {
+        selector: "@media (max-width:320px)",
+        type: "media",
+        value: "(max-width:320px)",
+        children: [
+            {
+                selector: "button:not(.sample)",
+                children: [],
+                type: "selector",
+                properties: [{ index: "color", value: "black" }],
+                selectors: [
+                    [
+                        { value: "button", args: [] },
+                        { value: ":not", args: [".sample"] }
+                    ]
+                ]
+            }
+        ],
+        properties: []
+    }
+];
+```
