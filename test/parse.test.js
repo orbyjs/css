@@ -97,4 +97,27 @@ describe("parse", () => {
             properties: []
         });
     });
+
+    test("property with line", () => {
+        let css = `
+        :host {
+            animation: pulse 0s ease
+              10s infinite alternate;
+        }
+        `,
+            [rule] = parse(css);
+
+        expect(rule).toEqual({
+            selector: ":host",
+            children: [],
+            type: "selector",
+            properties: [
+                {
+                    index: "animation",
+                    value: "pulse 0s ease\n              10s infinite alternate"
+                }
+            ],
+            selectors: [[{ value: ":host", args: [] }]]
+        });
+    });
 });
