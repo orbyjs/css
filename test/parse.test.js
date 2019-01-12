@@ -101,8 +101,7 @@ describe("parse", () => {
     test("property with line", () => {
         let css = `
         :host {
-            animation: pulse 0s ease
-              10s infinite alternate;
+            animation: pulse 0s ease 10s infinite alternate;
         }
         `,
             [rule] = parse(css);
@@ -114,7 +113,7 @@ describe("parse", () => {
             properties: [
                 {
                     index: "animation",
-                    value: "pulse 0s ease\n              10s infinite alternate"
+                    value: "pulse 0s ease 10s infinite alternate"
                 }
             ],
             selectors: [[{ value: ":host", args: [] }]]
