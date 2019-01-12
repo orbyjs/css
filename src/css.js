@@ -22,8 +22,6 @@ export function createRuleSelector(rule, className, parent = "", deep = 0) {
     let rules = [],
         root = "." + className;
 
-    parent = parent || root;
-
     let selectors = rule.selectors.map(([{ value, args }, ...states]) => {
             value = value.replace(/(\s+)$/, " ").replace(/^(\s+)/, "");
             switch (value) {
